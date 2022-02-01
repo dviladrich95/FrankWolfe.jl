@@ -242,8 +242,9 @@ function away_frank_wolfe(
                 time=tot_time,
                 x=x,
                 v=vertex,
-                active_set_length=length(active_set),
                 gamma=gamma,
+                active_set=active_set,
+                gradient=gradient,
             )
             callback(state)
         end
@@ -381,7 +382,6 @@ end
 function afw_step(x, gradient, lmo, active_set)
     _, _, _, _, a_lambda, a, a_loc =
         active_set_argminmax(active_set, gradient)
-    away_gap = fast_dot(a, gradient) - fast_dot(x, gradient)
     v = compute_extreme_point(lmo, gradient)
     grad_dot_x = fast_dot(x, gradient)
     away_gap = fast_dot(a, gradient) - grad_dot_x

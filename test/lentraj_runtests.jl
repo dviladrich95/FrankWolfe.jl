@@ -2,12 +2,11 @@ using FrankWolfe
 using Test
 using LinearAlgebra
 using DoubleFloats
+using DelimitedFiles
+import FrankWolfe: ActiveSet
 
-include("lmo.jl")
-include("function_gradient.jl")
-include("active_set.jl")
-include("utils.jl")
-include("pairwise.jl")
+filename = joinpath(@__DIR__, "lentraj.txt")
+len_traj_array = vec(DelimitedFiles.readdlm(filename))
 
 @testset "Testing vanilla Frank-Wolfe with various step size and momentum strategies" begin
     f(x) = norm(x)^2
@@ -16,63 +15,73 @@ include("pairwise.jl")
     end
     lmo_prob = FrankWolfe.ProbabilitySimplexOracle(1)
     x0 = FrankWolfe.compute_extreme_point(lmo_prob, zeros(5))
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Agnostic(),
-            verbose=true,
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.frank_wolfe(
+            trajectory=true,
+            verbose=false,
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Agnostic(),
+            trajectory=true,
             verbose=false,
             gradient=collect(similar(x0)),
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Goldenratio(),
-            verbose=true,
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.frank_wolfe(
+            trajectory=true,
+            verbose=false,
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Backtracking(),
+            trajectory=true,
             verbose=false,
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Nonconvex(),
+            trajectory=true,
             verbose=false,
-        )[3] - 0.2,
-    ) < 1.0e-2
-    @test FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
         f,
         grad!,
         lmo_prob,
@@ -80,58 +89,69 @@ include("pairwise.jl")
         max_iteration=1000,
         line_search=FrankWolfe.Shortstep(),
         L=2,
+        trajectory=true,
         verbose=false,
-    )[3] ≈ 0.2
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Nonconvex(),
+            trajectory=true,
             verbose=false,
-        )[3] - 0.2,
-    ) < 1.0e-2
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Agnostic(),
+            trajectory=true,
             verbose=false,
             momentum=0.9,
-        )[3] - 0.2,
-    ) < 1.0e-3
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Agnostic(),
+            trajectory=true,
             verbose=false,
             momentum=0.5,
-        )[3] - 0.2,
-    ) < 1.0e-3
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Agnostic(),
+            trajectory=true,
             verbose=false,
             momentum=0.9,
             emphasis=FrankWolfe.memory,
-        )[3] - 0.2,
-    ) < 1.0e-3
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -139,12 +159,14 @@ include("pairwise.jl")
             max_iteration=1000,
             line_search=FrankWolfe.Adaptive(),
             L=100,
+            trajectory=true,
             verbose=false,
             momentum=0.9,
-        )[3] - 0.2,
-    ) < 1.0e-3
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -152,12 +174,14 @@ include("pairwise.jl")
             max_iteration=1000,
             line_search=FrankWolfe.Adaptive(),
             L=100,
+            trajectory=true,
             verbose=false,
             momentum=0.5,
-        )[3] - 0.2,
-    ) < 1.0e-3
-    @test abs(
-        FrankWolfe.frank_wolfe(
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+    x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -165,11 +189,13 @@ include("pairwise.jl")
             max_iteration=1000,
             line_search=FrankWolfe.Adaptive(),
             L=100,
+            trajectory=true,
             verbose=false,
             momentum=0.9,
             emphasis=FrankWolfe.memory,
-        )[3] - 0.2,
-    ) < 1.0e-3
+    )
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 end
 
 @testset "Gradient with momentum correctly updated" begin
@@ -185,30 +211,36 @@ end
     end
     lmo_prob = FrankWolfe.ProbabilitySimplexOracle(1)
     x0 = FrankWolfe.compute_extreme_point(lmo_prob, zeros(5))
-    @test abs(
-        FrankWolfe.lazified_conditional_gradient(
+
+x, v, primal, dual_gap, trajectory = FrankWolfe.lazified_conditional_gradient(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Goldenratio(),
-            verbose=true,
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.lazified_conditional_gradient(
+            trajectory=true,
+            verbose=false,
+    )
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+x, v, primal, dual_gap, trajectory = FrankWolfe.lazified_conditional_gradient(
             f,
             grad!,
             lmo_prob,
             x0,
             max_iteration=1000,
             line_search=FrankWolfe.Backtracking(),
-            verbose=true,
-        )[3] - 0.2,
-    ) < 1.0e-5
-    @test abs(
-        FrankWolfe.lazified_conditional_gradient(
+            trajectory=true,
+            verbose=false,
+    )
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
+
+x, v, primal, dual_gap, trajectory = FrankWolfe.lazified_conditional_gradient(
             f,
             grad!,
             lmo_prob,
@@ -216,9 +248,12 @@ end
             max_iteration=1000,
             line_search=FrankWolfe.Shortstep(),
             L=2,
-            verbose=true,
-        )[3] - 0.2,
-    ) < 1.0e-5
+            trajectory=true,
+            verbose=false,
+    )
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1) 
 end
 
 @testset "Testing Lazified Conditional Gradients with cache strategies" begin
@@ -243,10 +278,12 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Shortstep(),
         L=2,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
     )
 
-    @test primal - 1 / n <= bound
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.lazified_conditional_gradient(
         f,
@@ -257,10 +294,12 @@ end
         line_search=FrankWolfe.Shortstep(),
         L=2,
         cache_size=100,
+        trajectory=true,
         verbose=false,
     )
 
-    @test primal - 1 / n <= bound
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.lazified_conditional_gradient(
         f,
@@ -272,10 +311,12 @@ end
         L=2,
         cache_size=100,
         greedy_lazy=true,
+        trajectory=true,
         verbose=false,
     )
 
-    @test primal - 1 / n <= bound
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 end
 
 @testset "Testing emphasis blas vs memory" begin
@@ -301,11 +342,13 @@ end
             max_iteration=k,
             line_search=FrankWolfe.Backtracking(),
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.blas,
         )
 
-        @test x !== nothing
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
@@ -315,17 +358,19 @@ end
             max_iteration=k,
             line_search=FrankWolfe.Backtracking(),
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.memory,
         )
 
-        @test x !== nothing
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
     end
     @testset "Using dense structure" begin
         lmo_prob = FrankWolfe.L1ballDense{Float64}(1)
         x0 = FrankWolfe.compute_extreme_point(lmo_prob, zeros(n))
 
-        x, _ = FrankWolfe.frank_wolfe(
+        x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -333,13 +378,15 @@ end
             max_iteration=k,
             line_search=FrankWolfe.Backtracking(),
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.blas,
         )
 
-        @test x !== nothing
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
-        x, _ = FrankWolfe.frank_wolfe(
+        x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -347,14 +394,16 @@ end
             max_iteration=k,
             line_search=FrankWolfe.Backtracking(),
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.memory,
         )
 
-        @test x !== nothing
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         line_search = FrankWolfe.MonotonousStepSize()
-        x, _, primal_conv, _ = FrankWolfe.frank_wolfe(
+        x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -362,13 +411,15 @@ end
             max_iteration=k,
             line_search=line_search,
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.memory,
         )
-        @test line_search.factor < 20
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         line_search = FrankWolfe.MonotonousNonConvexStepSize()
-        x, _, primal_nonconv, _ = FrankWolfe.frank_wolfe(
+        x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
             grad!,
             lmo_prob,
@@ -376,10 +427,12 @@ end
             max_iteration=k,
             line_search=line_search,
             print_iter=k / 10,
+            trajectory=true,
             verbose=false,
             emphasis=FrankWolfe.memory,
         )
-        @test line_search.factor < 20
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
     end
 end
 @testset "Testing rational variant" begin
@@ -399,7 +452,6 @@ end
     lmo = FrankWolfe.ProbabilitySimplexOracle{Rational{BigInt}}(rhs)
     direction = rand(n)
     x0 = FrankWolfe.compute_extreme_point(lmo, direction)
-    @test eltype(x0) == Rational{BigInt}
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
         f,
@@ -410,10 +462,12 @@ end
         line_search=FrankWolfe.Agnostic(),
         print_iter=k / 10,
         emphasis=FrankWolfe.blas,
+        trajectory=true,
         verbose=false,
     )
 
-    @test eltype(x0) == Rational{BigInt}
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
         f,
@@ -424,10 +478,12 @@ end
         line_search=FrankWolfe.Agnostic(),
         print_iter=k / 10,
         emphasis=FrankWolfe.memory,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
     )
-    @test eltype(x0) == eltype(x) == Rational{BigInt}
-    @test f(x) <= 1e-4
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     # very slow computation, explodes quickly
     x0 = collect(FrankWolfe.compute_extreme_point(lmo, direction))
@@ -441,7 +497,8 @@ end
         L=2,
         print_iter=k / 100,
         emphasis=FrankWolfe.memory,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
     )
 
     x0 = FrankWolfe.compute_extreme_point(lmo, direction)
@@ -455,9 +512,11 @@ end
         L=2,
         print_iter=k / 10,
         emphasis=FrankWolfe.memory,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
     )
-    @test eltype(x) == Rational{BigInt}
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 end
 @testset "Multi-precision tests" begin
     rhs = 1
@@ -490,11 +549,13 @@ end
             line_search=FrankWolfe.Agnostic(),
             print_iter=k / 10,
             emphasis=FrankWolfe.blas,
-            verbose=true,
+            trajectory=true,
+            verbose=false,
         )
 
-        @test eltype(x0) == T
-        @test primal - 1 / n <= bound
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         x, v, primal, dual_gap, trajectory = FrankWolfe.frank_wolfe(
             f,
@@ -505,11 +566,13 @@ end
             line_search=FrankWolfe.Agnostic(),
             print_iter=k / 10,
             emphasis=FrankWolfe.memory,
-            verbose=true,
+            trajectory=true,
+            verbose=false,
         )
 
-        @test eltype(x0) == T
-        @test primal - 1 // n <= bound
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         x, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
             f,
@@ -520,11 +583,13 @@ end
             line_search=FrankWolfe.Adaptive(),
             print_iter=k / 10,
             emphasis=FrankWolfe.memory,
-            verbose=true,
+            trajectory=true,
+            verbose=false,
         )
 
-        @test eltype(x0) == T
-        @test primal - 1 // n <= bound
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
         x, v, primal, dual_gap, trajectory = FrankWolfe.blended_conditional_gradient(
             f,
@@ -535,11 +600,13 @@ end
             line_search=FrankWolfe.Adaptive(),
             print_iter=k / 10,
             emphasis=FrankWolfe.memory,
-            verbose=true,
+            trajectory=true,
+            verbose=false,
         )
 
-        @test eltype(x0) == T
-        @test primal - 1 // n <= bound
+
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     end
 end
@@ -572,18 +639,19 @@ end
     f_stoch = FrankWolfe.StochasticObjective(simple_reg_loss, ∇simple_reg_loss, data_perfect, similar(params))
     lmo = FrankWolfe.LpNormLMO{2}(1.1 * norm(params_perfect))
 
-    θ, _, _, _, _ = FrankWolfe.stochastic_frank_wolfe(
+    x, v, primal, dual_gap, trajectory = FrankWolfe.stochastic_frank_wolfe(
         f_stoch,
         lmo,
         copy(params),
         momentum=0.95,
+        trajectory=true,
         verbose=false,
         line_search=FrankWolfe.Nonconvex(),
         max_iteration=100_000,
         batch_size=length(f_stoch.xs) ÷ 100,
-        trajectory=false,
     )
-    @test norm(θ - params_perfect) ≤ 0.05 * length(θ)
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
     # SFW with incrementing batch size
     batch_iterator = FrankWolfe.IncrementBatchIterator(
@@ -591,40 +659,44 @@ end
         length(f_stoch.xs) ÷ 10,
         2,
     )
-    θ, _, _, _, _ = FrankWolfe.stochastic_frank_wolfe(
+    x, v, primal, dual_gap, trajectory = FrankWolfe.stochastic_frank_wolfe(
         f_stoch,
         lmo,
         copy(params),
         momentum=0.95,
+        trajectory=true,
         verbose=false,
         line_search=FrankWolfe.Nonconvex(),
         max_iteration=5000,
         batch_iterator=batch_iterator,
-        trajectory=false,
+        
     )
-    @test batch_iterator.maxreached
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
     # SFW damped momentum 
     momentum_iterator = FrankWolfe.ExpMomentumIterator()
-    θ, _, _, _, _ = FrankWolfe.stochastic_frank_wolfe(
+    x, v, primal, dual_gap, trajectory = FrankWolfe.stochastic_frank_wolfe(
         f_stoch,
         lmo,
         copy(params),
+        trajectory=true,
         verbose=false,
         line_search=FrankWolfe.Nonconvex(),
         max_iteration=5000,
         batch_size=1,
-        trajectory=false,
+        
         momentum_iterator=momentum_iterator,
     )
-    θ, _, _, _, _ = FrankWolfe.stochastic_frank_wolfe(
+    x, v, primal, dual_gap, trajectory = FrankWolfe.stochastic_frank_wolfe(
         f_stoch,
         lmo,
         copy(params),
         line_search=FrankWolfe.Nonconvex(),
         max_iteration=5000,
         batch_size=1,
+        trajectory=true,
         verbose=false,
-        trajectory=false,
+        
         momentum_iterator=nothing,
     )
 end
@@ -648,6 +720,7 @@ end
         x0,
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
+        trajectory=true,
         verbose=false,
         emphasis=FrankWolfe.blas,
     )
@@ -660,27 +733,14 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.blas,
     )
 
-    @test x !== nothing
-    @test xref ≈ x atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 
-    xs, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
-        f,
-        grad!,
-        lmo_prob,
-        active_set,
-        max_iteration=k,
-        line_search=FrankWolfe.Backtracking(),
-        print_iter=k / 10,
-        verbose=true,
-        emphasis=FrankWolfe.blas,
-    )
-
-    @test xs !== nothing
-    @test xref ≈ xs atol = (1e-3 / length(x))
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
         f,
@@ -691,12 +751,14 @@ end
         away_steps = false,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.blas,
     )
 
-    @test x !== nothing
-    @test xref ≈ x atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
 
     xs, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
         f,
@@ -706,12 +768,14 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.blas,
     )
 
-    @test xs !== nothing
-    @test xref ≈ xs atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
         f,
@@ -721,12 +785,14 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.memory,
     )
 
-    @test x !== nothing
-    @test xref ≈ x atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
 
     x, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
         f,
@@ -737,12 +803,14 @@ end
         away_steps=false,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.memory,
     )
 
-    @test x !== nothing
-    @test xref ≈ x atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
 
     xs, v, primal, dual_gap, trajectory = FrankWolfe.away_frank_wolfe(
         f,
@@ -752,12 +820,14 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.memory,
     )
 
-    @test xs !== nothing
-    @test xref ≈ xs atol = (1e-3 / length(x))
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
+
 
     empty!(active_set)
     @test_throws ArgumentError("Empty active set") FrankWolfe.away_frank_wolfe(
@@ -768,9 +838,11 @@ end
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
         print_iter=k / 10,
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.blas,
-    )    
+    )
+    
 end
 
 @testset "Blended conditional gradient" begin
@@ -791,7 +863,8 @@ end
         x0,
         max_iteration=k,
         line_search=FrankWolfe.Backtracking(),
-        verbose=true,
+        trajectory=true,
+        verbose=false,
         emphasis=FrankWolfe.blas,
     )
 
@@ -805,33 +878,12 @@ end
         epsilon=1e-9,
         max_iteration=k,
         print_iter=1,
-        trajectory=false,
+        
+        trajectory=true,
         verbose=false,
         linesearch_tol=1e-10,
     )
 
-    @test x !== nothing
-    @test f(x) ≈ f(xref)
-
+    @test length(trajectory) <= len_traj_array[1]
+    deleteat!(len_traj_array,1)
 end
-
-
-include("oddities.jl")
-
-
-# in separate module for name space issues
-module BCGDirectionError
-using Test
-@testset "BCG direction accuracy" begin
-    include("bcg_direction_error.jl")
-end
-end
-
-module RationalTest
-using Test
-@testset "Rational test and shortstep" begin
-    include("rational_test.jl")
-end
-end
-
-include("generic-arrays.jl")

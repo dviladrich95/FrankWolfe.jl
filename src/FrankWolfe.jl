@@ -10,6 +10,7 @@ import Random
 
 import MathOptInterface
 const MOI = MathOptInterface
+const MOIU = MOI.Utilities
 
 # for plotting -> keep here or move somewhere else?
 using Plots
@@ -40,6 +41,7 @@ include("blended_cg.jl")
 include("afw.jl")
 include("fw_algorithms.jl")
 include("pairwise.jl")
+include("tracking.jl")
 
 # collecting most common data types etc and precompile 
 # min version req set to 1.5 to prevent stalling of julia 1
