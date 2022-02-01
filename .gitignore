@@ -22,5 +22,4 @@ examples/precompile_fw.jl
 docs/src/examples/*.md
 cc/libloporacle.so
 cc/*
-test/lentraj.txt
-test/lentraj_setup.jl
+docs/src/contributing.md
