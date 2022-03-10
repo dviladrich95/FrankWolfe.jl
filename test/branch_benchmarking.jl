@@ -5,34 +5,38 @@ using DelimitedFiles
 using SparseArrays
 using LibGit2
 import FrankWolfe: ActiveSet
-using PkgBenchmark
 
-include("benchmarking_suite.jl")
 
-function get_head_shastring()
-    repo_dir = pwd()
-    repo = LibGit2.GitRepo(repo_dir)
-    commit_head = LibGit2.peel(LibGit2.GitCommit,LibGit2.head(repo))
-    shastring_head = LibGit2.GitHash(commit_head)
-    return shastring_head
+function get_include(dir)
+    path = joinpath(dir,"test/benchmarking_suite.jl")
+    function run_include()
+        include(path)
+        return run_benchmark()
+    end
 end
 
-suite=Dict()
+@testset "Branch Benchmarking" begin
 
-dir_base = pwd()
-repo_base = LibGit2.GitRepo(dir_base)
-commit_base = LibGit2.peel(LibGit2.GitCommit,LibGit2.head(repo_base))
-shastring_base = string(LibGit2.GitHash(commit_base))
+    suite=Dict()
+    dir_base = pwd()
+    run_include = get_include(dir_base)
 
-suite[shastring_base]=run_benchmark()
+    repo_base = LibGit2.GitRepo(dir_base)
+    commit_base = LibGit2.peel(LibGit2.GitCommit,LibGit2.head(repo_base))
+    shastring_base = string(LibGit2.GitHash(commit_base))
 
-shastring_branch = "67d4d343ef3ef8427407e98f8eb753ecfee71a9a"
+    suite[shastring_base] = run_include()
 
-# function, grad! and lmo counters
+    # branch where the iteration count of the benchmarking_suite.jl frank_wolfe call was halved
 
-println(suite[shastring_base][end])
+    commit_branch = LibGit2.GitObject(repo_base,"benchmarking-mirror")
+    
+    shastring_branch = string(LibGit2.GitHash(commit_branch))
 
-suite[shastring_branch] = PkgBenchmark._withcommit(run_benchmark, repo_base,shastring_branch)
+    suite[shastring_branch] = FrankWolfe.withcommit(run_include, repo_base,shastring_branch)
 
-println(suite[shastring_base][end][end])
-println(suite[shastring_branch][end][end])
+    @test suite[shastring_base][end][end] ==  5002
+    @test suite[shastring_branch][end][end] == 2502
+
+end
+
