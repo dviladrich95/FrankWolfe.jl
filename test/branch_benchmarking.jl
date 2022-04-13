@@ -7,12 +7,6 @@ using LibGit2
 import FrankWolfe: ActiveSet
 
 
-macro @get_data(file)
-    open(file, "r") do f
-        filetxt = read(f)
-    end
-
-
 
 function get_include(file)
     function run_include()
@@ -22,15 +16,13 @@ function get_include(file)
 end
 
 
-
-
 suite=Dict()
 dir_base = pwd()
 example_dir = joinpath(dir_base, "examples")
 
 
-example_files = filter(example_dir) do f
-    endswith(f, ".jl") && occursin("benchmarking_suite", f)
+example_files = filter(readdir(example_dir, join=true)) do f
+    endswith(f, ".jl") && occursin("test_example_", f)
 end
 
 for file in example_files
