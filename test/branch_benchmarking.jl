@@ -10,7 +10,7 @@ import FrankWolfe: ActiveSet
 
 function get_include(file)
     return function run_include()
-        return Base.invokelatest(include(file))
+        return include(file)
     end
 end
 
