@@ -1,2 +1,2 @@
 a=3
-prinln(a)
+println(a)
