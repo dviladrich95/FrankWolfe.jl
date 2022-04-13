@@ -9,9 +9,8 @@ import FrankWolfe: ActiveSet
 
 
 function get_include(file)
-    function run_include()
-        Base.invokelatest(include(file))
-        return nothing
+    return function run_include()
+        return Base.invokelatest(include(file))
     end
 end
 
@@ -25,22 +24,16 @@ example_files = filter(readdir(example_dir, join=true)) do f
     endswith(f, ".jl") && occursin("test_example_", f)
 end
 
+repo_base = LibGit2.GitRepo(dir_base)
+commit_base = LibGit2.peel(LibGit2.GitCommit,LibGit2.head(repo_base))
+shastring_base = string(LibGit2.GitHash(commit_base))
+
+commit_branch = LibGit2.GitObject(repo_base,"benchmarking-mirror")
+shastring_branch = string(LibGit2.GitHash(commit_branch))
+
 for file in example_files
-
-    run_include = get_include(dir_base)
-
-    repo_base = LibGit2.GitRepo(dir_base)
-    commit_base = LibGit2.peel(LibGit2.GitCommit,LibGit2.head(repo_base))
-    shastring_base = string(LibGit2.GitHash(commit_base))
-
-    suite[shastring_base] = run_include()
-
-    # branch where the iteration count of the benchmarking_suite.jl frank_wolfe call was halved
-
-    commit_branch = LibGit2.GitObject(repo_base,"benchmarking-mirror")
-
-    shastring_branch = string(LibGit2.GitHash(commit_branch))
-
-    suite[shastring_branch] = FrankWolfe.withcommit(run_include, repo_base,shastring_branch)
+    run_include = get_include(file)
+    suite[string(shastring_base,"_",file)] = run_include()
+    suite[string(shastring_branch,"_",file)] = FrankWolfe.withcommit(run_include, repo_base,shastring_branch)
 
 end
