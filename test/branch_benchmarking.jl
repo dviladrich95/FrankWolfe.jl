@@ -6,11 +6,18 @@ using SparseArrays
 using LibGit2
 import FrankWolfe: ActiveSet
 
+
+macro @get_data(file)
+    open(file, "r") do f
+        filetxt = read(f)
+    end
+
+
+
 function get_include(file)
     function run_include()
-        include(file)
-        run_benchmark_latest = Base.invokelatest(run_benchmark)
-        return run_benchmark_latest
+        Base.invokelatest(include(file))
+        return nothing
     end
 end
 
@@ -19,9 +26,10 @@ end
 
 suite=Dict()
 dir_base = pwd()
+example_dir = joinpath(dir_base, "examples")
 
 
-example_files = filter(readdir(@__DIR__, join=true)) do f
+example_files = filter(example_dir) do f
     endswith(f, ".jl") && occursin("benchmarking_suite", f)
 end
 
