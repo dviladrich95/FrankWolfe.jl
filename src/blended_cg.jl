@@ -206,27 +206,9 @@ function blended_conditional_gradient(
                 active_set=active_set,
                 non_simplex_iter=non_simplex_iter,
                 gradient=gradient,
+                tt = tt,
             )
             callback(state)
-        end
-
-        if verbose && mod(t, print_iter) == 0
-            if t == 0
-                tt = initial
-            end
-            rep = (
-                st[Symbol(tt)],
-                string(t),
-                Float64(primal),
-                Float64(primal - dual_gap),
-                Float64(dual_gap),
-                tot_time,
-                t / tot_time,
-                length(active_set),
-                non_simplex_iter,
-            )
-            print_callback(rep, format_string)
-            flush(stdout)
         end
         t = t + 1
         non_simplex_iter += 1
@@ -602,38 +584,22 @@ function accelerated_simplex_gradient_descent_over_probability_simplex(
         primal = reduced_f(x)
         reduced_grad!(gradient_x, x)
         strong_wolfe_gap = strong_frankwolfe_gap_probability_simplex(gradient_x, x)
-
+        tt = simplex_descent
+        tot_time = (time_ns() - time_start) / 1.0e9
+        
         if callback !== nothing
             state = (
                 t=t + number_of_steps,
                 primal=primal,
                 dual=primal - tolerance,
                 dual_gap=tolerance,
-                time=(time_ns() - time_start) / 1e9,
+                time=tot_time,
                 x=x,
+                tt = tt,
             )
             callback(state)
         end
-        tt = simplex_descent
-        if verbose && mod(t + number_of_steps, print_iter) == 0
-            if t == 0
-                tt = initial
-            end
-            tot_time = (time_ns() - time_start) / 1.0e9
-            rep = (
-                st[Symbol(tt)],
-                string(t + number_of_steps),
-                Float64(primal),
-                Float64(primal - tolerance),
-                Float64(tolerance),
-                tot_time,
-                t / tot_time,
-                length(initial_point),
-                non_simplex_iter,
-            )
-            print_callback(rep, format_string)
-            flush(stdout)
-        end
+
         if timeout < Inf
             tot_time = (time_ns() - time_start) / 1e9
             if tot_time ≥ timeout
@@ -682,6 +648,8 @@ function simplex_gradient_descent_over_probability_simplex(
         primal = reduced_f(x)
         reduced_grad!(gradient, x)
         strong_wolfe_gap = strong_frankwolfe_gap_probability_simplex(gradient, x)
+        tt = simplex_descent
+        tot_time = (time_ns() - time_start) / 1.0e9
 
         if callback !== nothing
             state = (
@@ -689,31 +657,13 @@ function simplex_gradient_descent_over_probability_simplex(
                 primal=primal,
                 dual=primal - tolerance,
                 dual_gap=tolerance,
-                time=(time_ns() - time_start) / 1e9,
+                time=tot_time,
                 x=x,
+                tt=tt,
             )
             callback(state)
         end
-        tt = simplex_descent
-        if verbose && mod(t + number_of_steps, print_iter) == 0
-            if t == 0
-                tt = initial
-            end
-            tot_time = (time_ns() - time_start) / 1.0e9
-            rep = (
-                st[Symbol(tt)],
-                string(t + number_of_steps),
-                Float64(primal),
-                Float64(primal - tolerance),
-                Float64(tolerance),
-                tot_time,
-                t / tot_time,
-                length(initial_point),
-                non_simplex_iter,
-            )
-            print_callback(rep, format_string)
-            flush(stdout)
-        end
+
         if timeout < Inf
             tot_time = (time_ns() - time_start) / 1e9
             if tot_time ≥ timeout
@@ -920,6 +870,8 @@ function simplex_gradient_descent_over_convex_hull(
         x = get_active_set_iterate(active_set)
         primal = f(x)
         dual_gap = tolerance
+        tt = simplex_descent
+        tot_time = (time_ns() - time_start) / 1.0e9
 
         if callback !== nothing
             state = (
@@ -927,34 +879,16 @@ function simplex_gradient_descent_over_convex_hull(
                 primal=primal,
                 dual=primal - dual_gap,
                 dual_gap=dual_gap,
-                time=(time_ns() - time_start) / 1e9,
+                time=tot_time,
                 x=x,
                 active_set=active_set,
                 non_simplex_iter=non_simplex_iter,
                 gradient=gradient,
+                tt=tt,
             )
             callback(state)
         end
-        tt = simplex_descent
-        if verbose && mod(t + number_of_steps, print_iter) == 0
-            if t == 0
-                tt = initial
-            end
-            tot_time = (time_ns() - time_start) / 1.0e9
-            rep = (
-                st[Symbol(tt)],
-                string(t + number_of_steps),
-                Float64(primal),
-                Float64(primal - dual_gap),
-                Float64(dual_gap),
-                tot_time,
-                t / tot_time,
-                length(active_set),
-                non_simplex_iter,
-            )
-            print_callback(rep, format_string)
-            flush(stdout)
-        end
+
         if timeout < Inf
             tot_time = (time_ns() - time_start) / 1e9
             if tot_time ≥ timeout
