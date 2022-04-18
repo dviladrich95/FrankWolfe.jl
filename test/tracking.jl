@@ -54,24 +54,26 @@ end
     tgrad! = FrankWolfe.TrackingGradient(grad!,0)
     tlmo = FrankWolfe.TrackingLMO(lmo)
 
+    storage = []
     x0 = FrankWolfe.compute_extreme_point(tlmo, spzeros(1000))
-    callback = FrankWolfe.TrackingCallback()
 
-    FrankWolfe.frank_wolfe(
+
+        FrankWolfe.frank_wolfe(
         tf,
         tgrad!,
         tlmo,
         x0,
         line_search=FrankWolfe.Agnostic(),
-        max_iteration=5000,
+        max_iteration=50,
         trajectory=true,
-        callback=callback,
+        callback=nothing,
+        traj_data=storage,
         verbose=true,
     )
     
-    @test length(callback.storage[1]) == 9
+    @test length(storage[1]) == 5
 
-    niters = length(callback.storage)
+    niters = length(storage)
     @test tf.counter == niters + 1
     @test tgrad!.counter == niters + 1
     @test tlmo.counter == niters + 2 # x0 computation and initialization
@@ -90,24 +92,25 @@ end
     tgrad! = FrankWolfe.TrackingGradient(grad!,0)
     tlmo = FrankWolfe.TrackingLMO(lmo)
 
+    storage = []
     x0 = FrankWolfe.compute_extreme_point(tlmo, spzeros(1000))
-    callback = FrankWolfe.TrackingCachedCallback()
 
-    FrankWolfe.lazified_conditional_gradient(
+    results = FrankWolfe.lazified_conditional_gradient(
         tf,
         tgrad!,
         tlmo,
         x0,
         line_search=FrankWolfe.Agnostic(),
-        max_iteration=5000,
+        max_iteration=50,
         trajectory=true,
-        callback=callback,
+        callback=nothing,
+        traj_data=storage,
         verbose=false,
     )
+    
+    @test length(storage[1]) == 5
 
-    @test length(callback.storage[1]) == 9
-
-    niters = length(callback.storage)
+    niters = length(storage)
     @test tf.counter == niters + 1
     @test tgrad!.counter == niters + 1
     # lazification
