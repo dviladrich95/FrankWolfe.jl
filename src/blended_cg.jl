@@ -28,7 +28,7 @@ function blended_conditional_gradient(
     weight_purge_threshold=1e-9,
     gradient=nothing,
     callback=nothing,
-    traj_data = [],
+    traj_data=[],
     timeout=Inf,
     linesearch_workspace=nothing,
     linesearch_inner_workspace=nothing,
@@ -37,7 +37,7 @@ function blended_conditional_gradient(
 
     # format string for output of the algorithm
     format_string = "%6s %13s %14e %14e %14e %14e %14e %14i %14i\n"
-    headers = ("Type","Iteration","Primal","Dual","Dual Gap","Time","It/sec","#ActiveSet","#non-simplex",)
+    headers = ("Type","Iteration","Primal","Dual","Dual Gap","Time","It/sec","#ActiveSet","#non-simplex")
 
     function format_state(state)
         rep = (
@@ -69,11 +69,11 @@ function blended_conditional_gradient(
     phi = fast_dot(gradient, x0 - vmax) / 2
     dual_gap = phi
 
-    if trajectory && callback === nothing
-        callback = make_trajectory_callback(callback, traj_data, trajectory)
+    if trajectory
+        callback = make_trajectory_callback(callback, traj_data)
     end
 
-    if verbose 
+    if verbose
         callback = make_print_callback(callback, print_iter, headers, format_string, format_state)
     end
 
@@ -380,7 +380,7 @@ function minimize_over_convex_hull!(
                         tolerance,
                         t,
                         time_start,
-                        non_simplex_iter,
+                        active_set,
                         verbose=verbose,
                         print_iter=print_iter,
                         L=L_reduced,
@@ -388,8 +388,8 @@ function minimize_over_convex_hull!(
                         max_iteration=max_iteration,
                         callback=callback,
                         timeout=timeout,
-                        format_string=format_string,
-                        memory_mode=memory_mode
+                        memory_mode=memory_mode,
+                        non_simplex_iter=non_simplex_iter,
                     )
                 @. active_set.weights = new_weights
             end
@@ -404,13 +404,13 @@ function minimize_over_convex_hull!(
                 t,
                 time_start,
                 non_simplex_iter,
+                active_set,
                 verbose=verbose,
                 print_iter=print_iter,
                 L=L_reduced,
                 max_iteration=max_iteration,
                 callback=callback,
                 timeout=timeout,
-                format_string=format_string,
             )
             @. active_set.weights = new_weights
         end
@@ -547,7 +547,7 @@ function accelerated_simplex_gradient_descent_over_probability_simplex(
     tolerance,
     t,
     time_start,
-    non_simplex_iter;
+    active_set::ActiveSet;
     verbose=verbose,
     print_iter=print_iter,
     L=1.0,
@@ -555,8 +555,8 @@ function accelerated_simplex_gradient_descent_over_probability_simplex(
     max_iteration,
     callback,
     timeout=Inf,
-    format_string=nothing,
-    memory_mode::MemoryEmphasis
+    memory_mode::MemoryEmphasis,
+    non_simplex_iter=0,
 )
     number_of_steps = 0
     x = deepcopy(initial_point)
@@ -601,7 +601,9 @@ function accelerated_simplex_gradient_descent_over_probability_simplex(
                 dual_gap=tolerance,
                 time=tot_time,
                 x=x,
+                active_set=active_set,
                 tt=tt,
+                non_simplex_iter=non_simplex_iter,
             )
             if callback(state) === false
                 break
@@ -634,14 +636,14 @@ function simplex_gradient_descent_over_probability_simplex(
     tolerance,
     t,
     time_start,
-    non_simplex_iter;
+    non_simplex_iter,
+    active_set::ActiveSet;
     verbose=verbose,
     print_iter=print_iter,
     L=1.0,
     max_iteration,
     callback,
     timeout=Inf,
-    format_string=nothing,
 )
     number_of_steps = 0
     x = deepcopy(initial_point)
@@ -666,10 +668,12 @@ function simplex_gradient_descent_over_probability_simplex(
                 time=tot_time,
                 x=x,
                 tt=tt,
-                active_set=initial_point,
-                non_simplex_iter = non_simplex_iter,
+                active_set=active_set,
+                non_simplex_iter=non_simplex_iter,
             )
-            callback(state)
+            if callback(state) === false
+                break
+            end
         end
 
         if timeout < Inf
