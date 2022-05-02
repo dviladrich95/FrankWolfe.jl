@@ -14,7 +14,7 @@ end
 
 suite=Dict()
 dir_base = pwd()
-example_dir = joinpath(dir_base, "examples_benchmarking")
+example_dir = joinpath(dir_base, "benchmarking/examples_benchmarking")
 
 example_files = filter(readdir(example_dir, join=true)) do f
     endswith(f, ".jl") && occursin("test_example_", f)
