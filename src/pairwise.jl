@@ -20,7 +20,7 @@ function blended_pairwise_conditional_gradient(
     memory_mode::MemoryEmphasis=InplaceEmphasis(),
     gradient=nothing,
     callback=nothing,
-    traj_data = [],
+    traj_data=[],
     timeout=Inf,
     renorm_interval=1000,
     lazy=false,
@@ -44,7 +44,7 @@ function blended_pairwise_conditional_gradient(
         memory_mode=memory_mode,
         gradient=gradient,
         callback=callback,
-        traj_data = traj_data,
+        traj_data=traj_data,
         timeout=timeout,
         renorm_interval=renorm_interval,
         lazy=lazy,
@@ -72,7 +72,7 @@ function blended_pairwise_conditional_gradient(
     memory_mode::MemoryEmphasis=InplaceEmphasis(),
     gradient=nothing,
     callback=nothing,
-    traj_data = [],
+    traj_data=[],
     timeout=Inf,
     renorm_interval=1000,
     lazy=false,
@@ -97,11 +97,11 @@ function blended_pairwise_conditional_gradient(
         return rep
     end
 
-    if trajectory && callback === nothing
-        callback = make_trajectory_callback(callback, traj_data, trajectory)
+    if trajectory
+        callback = make_trajectory_callback(callback, traj_data)
     end
 
-    if verbose 
+    if verbose
         callback = make_print_callback(callback, print_iter, headers, format_string, format_state)
     end
 
@@ -193,7 +193,7 @@ function blended_pairwise_conditional_gradient(
                 gradient,
                 x,
                 d,
-                1.0,
+                gamma_max,
                 linesearch_workspace,
                 memory_mode
             )
@@ -257,7 +257,7 @@ function blended_pairwise_conditional_gradient(
             state = (
                 t=t,
                 primal=primal,
-                dual=primal - dual_gap,
+                dual=primal - phi,
                 dual_gap=phi,
                 time=tot_time,
                 x=x,
@@ -267,7 +267,9 @@ function blended_pairwise_conditional_gradient(
                 gradient=gradient,
                 tt=tt,
             )
-            callback(state)
+            if callback(state) === false
+                break
+            end
         end
         t += 1
     end
