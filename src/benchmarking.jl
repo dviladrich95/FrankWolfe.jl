@@ -1,5 +1,4 @@
 """
-
 Runs a function at a commit on a repo and afterwards goes back
 to the original commit / branch.
 """
